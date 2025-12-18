@@ -62,7 +62,7 @@
 import { ref } from 'vue'
 import Footer from './Footer.vue'
 
-const emit = defineEmits(['back', 'patientInfoFetched'])
+const emit = defineEmits(['back', 'patientInfoFetched', 'goToIDCardInput']) 
 
 const selectedMethod = ref(null)
 const inputValue = ref('')
@@ -93,8 +93,13 @@ const mockPatients = [
 
 // 选择获取方式
 const selectMethod = (method) => {
-  selectedMethod.value = method
-  inputValue.value = ''
+  if (method === 'idCard') {
+    // 跳转到身份证号输入页面
+    emit('goToIDCardInput')
+  } else {
+    selectedMethod.value = method
+    inputValue.value = ''
+  }
 }
 
 // 取消输入
