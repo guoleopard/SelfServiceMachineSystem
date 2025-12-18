@@ -2,3 +2,4 @@ fastapi==0.125.0
 uvicorn==0.38.0
 pydantic==2.12.5
 python-multipart==0.0.21
+mysql-connector-python==8.4.0
