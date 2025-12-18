@@ -1,9 +1,69 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
+from sqlalchemy import create_engine, Column, Integer, String, Date, TIMESTAMP, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+import os
+from datetime import datetime
+
+# 加载环境变量
+load_dotenv()
+
+# 数据库连接配置
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
+# 创建数据库连接
+DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 app = FastAPI(title="医院自助机接口系统", version="1.0.0")
 
-# 设备信息模型
+# 数据库模型定义
+class DeviceInfoDB(Base):
+    __tablename__ = "device_info"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    device_id = Column(String(50), unique=True, index=True, nullable=False)
+    device_name = Column(String(100), nullable=False)
+    device_type = Column(String(50), nullable=False)
+    location = Column(String(200), nullable=False)
+    status = Column(String(20), nullable=False)
+    last_maintenance = Column(Date, nullable=False)
+    created_at = Column(TIMESTAMP, default=datetime.now)
+    updated_at = Column(TIMESTAMP, default=datetime.now, onupdate=datetime.now)
+
+class HospitalInfoDB(Base):
+    __tablename__ = "hospital_info"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    hospital_id = Column(String(50), unique=True, index=True, nullable=False)
+    hospital_name = Column(String(100), nullable=False)
+    address = Column(String(200), nullable=False)
+    phone = Column(String(20), nullable=False)
+    website = Column(String(100), nullable=False)
+    level = Column(String(20), nullable=False)
+    created_at = Column(TIMESTAMP, default=datetime.now)
+    updated_at = Column(TIMESTAMP, default=datetime.now, onupdate=datetime.now)
+
+class HomeModuleDB(Base):
+    __tablename__ = "home_modules"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    module_id = Column(String(50), unique=True, index=True, nullable=False)
+    module_name = Column(String(100), nullable=False)
+    module_type = Column(String(50), nullable=False)
+    icon = Column(String(100), nullable=False)
+    url = Column(String(100), nullable=False)
+    order = Column(Integer, nullable=False)
+    device_id = Column(String(50), ForeignKey("device_info.device_id"), nullable=True)
+    created_at = Column(TIMESTAMP, default=datetime.now)
+    updated_at = Column(TIMESTAMP, default=datetime.now, onupdate=datetime.now)
+
+# Pydantic 模型定义（用于 API 响应）
 class DeviceInfo(BaseModel):
     device_id: str
     device_name: str
@@ -12,7 +72,9 @@ class DeviceInfo(BaseModel):
     status: str
     last_maintenance: str
 
-# 医院信息模型
+    class Config:
+        orm_mode = True
+
 class HospitalInfo(BaseModel):
     hospital_id: str
     hospital_name: str
@@ -21,7 +83,9 @@ class HospitalInfo(BaseModel):
     website: str
     level: str
 
-# 首页模块模型
+    class Config:
+        orm_mode = True
+
 class HomeModule(BaseModel):
     module_id: str
     module_name: str
@@ -30,85 +94,75 @@ class HomeModule(BaseModel):
     url: str
     order: int
 
+    class Config:
+        orm_mode = True
+
+# 获取数据库会话
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 # 设备信息接口
 @app.get("/api/device/info", response_model=DeviceInfo, summary="获取设备信息")
-def get_device_info():
+def get_device_info(db: SessionLocal = Depends(get_db)):
     """获取医院自助机的设备信息"""
-    return {
-        "device_id": "DEV001",
-        "device_name": "医院自助服务终端",
-        "device_type": "多功能自助机",
-        "location": "门诊大厅一楼",
-        "status": "正常",
-        "last_maintenance": "2023-10-15"
-    }
+    device = db.query(DeviceInfoDB).first()
+    if device:
+        return DeviceInfo(
+            device_id=device.device_id,
+            device_name=device.device_name,
+            device_type=device.device_type,
+            location=device.location,
+            status=device.status,
+            last_maintenance=str(device.last_maintenance)
+        )
+    return None
 
 # 医院信息接口
 @app.get("/api/hospital/info", response_model=HospitalInfo, summary="获取医院信息")
-def get_hospital_info():
+def get_hospital_info(db: SessionLocal = Depends(get_db)):
     """获取医院的基本信息"""
-    return {
-        "hospital_id": "HOS001",
-        "hospital_name": "人民医院",
-        "address": "北京市朝阳区健康路88号",
-        "phone": "010-12345678",
-        "website": "http://www.renminhospital.com",
-        "level": "三级甲等"
-    }
+    hospital = db.query(HospitalInfoDB).first()
+    if hospital:
+        return HospitalInfo(
+            hospital_id=hospital.hospital_id,
+            hospital_name=hospital.hospital_name,
+            address=hospital.address,
+            phone=hospital.phone,
+            website=hospital.website,
+            level=hospital.level
+        )
+    return None
 
 # 根据设备信息获取首页模块列表接口
 @app.get("/api/home/modules", response_model=list[HomeModule], summary="获取首页模块列表")
-def get_home_modules(device_id: str = None):
+def get_home_modules(device_id: str = None, db: SessionLocal = Depends(get_db)):
     """根据设备信息获取首页模块列表"""
-    modules = [
-        {
-            "module_id": "MOD001",
-            "module_name": "挂号服务",
-            "module_type": "service",
-            "icon": "挂号图标",
-            "url": "/api/register",
-            "order": 1
-        },
-        {
-            "module_id": "MOD002",
-            "module_name": "缴费服务",
-            "module_type": "service",
-            "icon": "缴费图标",
-            "url": "/api/payment",
-            "order": 2
-        },
-        {
-            "module_id": "MOD003",
-            "module_name": "报告打印",
-            "module_type": "service",
-            "icon": "报告图标",
-            "url": "/api/report",
-            "order": 3
-        },
-        {
-            "module_id": "MOD004",
-            "module_name": "病历查询",
-            "module_type": "service",
-            "icon": "病历图标",
-            "url": "/api/medical-records",
-            "order": 4
-        },
-        {
-            "module_id": "MOD005",
-            "module_name": "医院介绍",
-            "module_type": "info",
-            "icon": "医院图标",
-            "url": "/api/hospital/intro",
-            "order": 5
-        }
-    ]
-    
-    # 如果提供了设备ID，可以根据设备ID返回不同的模块列表
     if device_id:
-        # 这里可以添加根据设备ID定制模块的逻辑
-        pass
+        # 查询特定设备的模块和通用模块
+        modules = db.query(HomeModuleDB).filter(
+            (HomeModuleDB.device_id == device_id) | (HomeModuleDB.device_id == None)
+        ).order_by(HomeModuleDB.order).all()
+    else:
+        # 查询通用模块
+        modules = db.query(HomeModuleDB).filter(HomeModuleDB.device_id == None).order_by(HomeModuleDB.order).all()
     
-    return modules
+    result = []
+    for module in modules:
+        result.append(HomeModule(
+            module_id=module.module_id,
+            module_name=module.module_name,
+            module_type=module.module_type,
+            icon=module.icon,
+            url=module.url,
+            order=module.order
+        ))
+    
+    return result
 
 if __name__ == "__main__":
     import uvicorn
