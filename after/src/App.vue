@@ -60,6 +60,47 @@
         </div>
       </div>
 
+      <!-- 身份证号读取结果页面 -->
+      <div v-if="currentPage === 'idCardResult'" class="id-card-result-page">
+        <div class="page-header">
+          <button class="back-btn" @click="goToPage('readPatient')">← 返回</button>
+          <h2>身份证号读取结果</h2>
+        </div>
+        
+        <div class="id-card-input-section">
+          <div class="input-label">身份证号：</div>
+          <div class="id-card-input-field">{{ idCardNumber }}</div>
+        </div>
+        
+        <!-- 身份证号输入键盘 -->
+        <div class="id-card-keyboard">
+          <div class="keyboard-row">
+            <button class="keyboard-btn" @click="addIdCardChar('1')">1</button>
+            <button class="keyboard-btn" @click="addIdCardChar('2')">2</button>
+            <button class="keyboard-btn" @click="addIdCardChar('3')">3</button>
+          </div>
+          <div class="keyboard-row">
+            <button class="keyboard-btn" @click="addIdCardChar('4')">4</button>
+            <button class="keyboard-btn" @click="addIdCardChar('5')">5</button>
+            <button class="keyboard-btn" @click="addIdCardChar('6')">6</button>
+          </div>
+          <div class="keyboard-row">
+            <button class="keyboard-btn" @click="addIdCardChar('7')">7</button>
+            <button class="keyboard-btn" @click="addIdCardChar('8')">8</button>
+            <button class="keyboard-btn" @click="addIdCardChar('9')">9</button>
+          </div>
+          <div class="keyboard-row">
+            <button class="keyboard-btn keyboard-x" @click="addIdCardChar('X')">X</button>
+            <button class="keyboard-btn" @click="addIdCardChar('0')">0</button>
+            <button class="keyboard-btn keyboard-backspace" @click="deleteIdCardChar()">← 删除</button>
+          </div>
+          <div class="keyboard-row">
+            <button class="keyboard-btn keyboard-clear" @click="clearIdCardNumber()">清空</button>
+            <button class="keyboard-btn keyboard-confirm" @click="confirmIdCardNumber()">确认</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 患者信息确认页面 -->
       <div v-if="currentPage === 'confirmPatient'" class="confirm-patient-page">
         <div class="page-header">
@@ -186,6 +227,7 @@ import { ref } from 'vue'
 const currentPage = ref('home')
 const selectedDept = ref(null)
 const currentPatient = ref(null)
+const idCardNumber = ref('')
 
 // 科室数据
 const departments = [
@@ -289,10 +331,9 @@ const showCustomInput = (method) => {
   currentInputMethod.value = method
   
   if (method === 'idCard') {
-    inputDialogTitle.value = '请输入身份证号'
-    inputDialogType.value = 'text'
-    dialogInputValue.value = ''
-    showInputDialog.value = true
+    // 跳转到身份证号读取结果页面
+    idCardNumber.value = ''
+    currentPage.value = 'idCardResult'
   } else if (method === 'medicalCard') {
     inputDialogTitle.value = '请输入医保卡卡号'
     inputDialogType.value = 'text'
@@ -302,6 +343,35 @@ const showCustomInput = (method) => {
     inputDialogTitle.value = '电子医保码'
     inputDialogType.value = 'confirm'
     showInputDialog.value = true
+  }
+}
+
+// 添加身份证号字符
+const addIdCardChar = (char) => {
+  // 身份证号最多18位
+  if (idCardNumber.value.length < 18) {
+    idCardNumber.value += char
+  }
+}
+
+// 删除身份证号字符
+const deleteIdCardChar = () => {
+  if (idCardNumber.value.length > 0) {
+    idCardNumber.value = idCardNumber.value.slice(0, -1)
+  }
+}
+
+// 清空身份证号
+const clearIdCardNumber = () => {
+  idCardNumber.value = ''
+}
+
+// 确认身份证号
+const confirmIdCardNumber = () => {
+  if (idCardNumber.value.length === 18) {
+    readPatientInfo('idCard', idCardNumber.value)
+  } else {
+    alert('请输入完整的18位身份证号')
   }
 }
 
@@ -725,6 +795,108 @@ const showMessage = (message) => {
   display: flex;
   justify-content: space-around;
   font-size: 0.9rem;
+}
+
+/* 身份证号读取结果页面样式 */
+.id-card-result-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.id-card-input-section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.input-label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.id-card-input-field {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #333;
+  padding: 1rem;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  letter-spacing: 0.5rem;
+  text-align: center;
+}
+
+/* 身份证号输入键盘样式 */
+.id-card-keyboard {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  max-width: 350px;
+  margin: 0 auto;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.keyboard-btn {
+  flex: 1;
+  max-width: 80px;
+  min-width: 60px;
+  padding: 1.8rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.4rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+  color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.keyboard-btn:hover {
+  background-color: #3498db;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.keyboard-x {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.keyboard-x:hover {
+  background-color: #c0392b;
+}
+
+.keyboard-backspace,
+.keyboard-clear {
+  background-color: #f39c12;
+  color: white;
+}
+
+.keyboard-backspace:hover,
+.keyboard-clear:hover {
+  background-color: #e67e22;
+}
+
+.keyboard-confirm {
+  background-color: #27ae60;
+  color: white;
+}
+
+.keyboard-confirm:hover {
+  background-color: #219a52;
 }
 
 /* 竖屏适配 */
