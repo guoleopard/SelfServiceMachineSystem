@@ -5,9 +5,9 @@ const emit = defineEmits(['navigate'])
 
 const modules = [
   { id: 1, name: '预约挂号', icon: '📅', path: 'appointment' },
-  { id: 2, name: '缴费查询', icon: '💳', path: 'payment' },
+  { id: 2, name: '缴费查询', icon: '💳', path: 'query' },
   { id: 3, name: '报告打印', icon: '📄', path: 'report' },
-  { id: 4, name: '自助充值', icon: '💵', path: 'recharge' },
+  { id: 4, name: '自助缴费', icon: '💵', path: 'payment' },
   { id: 5, name: '信息查询', icon: '🔍', path: 'info' },
   { id: 6, name: '满意度评价', icon: '⭐', path: 'feedback' }
 ]
