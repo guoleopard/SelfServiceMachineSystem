@@ -1,6 +1,7 @@
 <script setup>
 import Home from './views/Home.vue'
 import Appointment from './views/Appointment.vue'
+import PaymentFlow from './views/PaymentFlow.vue'
 import { ref } from 'vue'
 
 const currentView = ref('home')
@@ -17,6 +18,9 @@ function navigateTo(view) {
     </div>
     <div v-else-if="currentView === 'appointment'">
       <Appointment @navigate="navigateTo" />
+    </div>
+    <div v-else-if="currentView === 'payment-flow'">
+      <PaymentFlow @navigate="navigateTo" />
     </div>
   </div>
 </template>
