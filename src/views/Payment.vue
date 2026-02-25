@@ -455,7 +455,7 @@ onUnmounted(() => {
 
 .method-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 20px;
 }
 
