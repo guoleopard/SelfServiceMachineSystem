@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import CountdownTimer from '../components/CountdownTimer.vue'
 import StepProgress from '../components/StepProgress.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const props = defineProps({
   paymentResult: {
@@ -15,12 +16,17 @@ const props = defineProps({
 
 const emit = defineEmits(['navigate'])
 
+const loading = ref(false)
 const paymentData = ref(props.paymentResult)
 const countdownToHome = ref(5)
 let timer = null
 
 onMounted(() => {
-  startCountdown()
+  loading.value = true
+  setTimeout(() => {
+    loading.value = false
+    startCountdown()
+  }, 800)
 })
 
 function startCountdown() {
@@ -50,6 +56,7 @@ function handleTimeout() {
 <template>
   <div class="success-container">
     <CountdownTimer @timeout="handleTimeout" />
+    <LoadingSpinner :visible="loading" text="加载中..." />
     
     <StepProgress :current-step="5" />
     

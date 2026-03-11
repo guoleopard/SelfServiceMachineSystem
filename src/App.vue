@@ -20,10 +20,6 @@ function navigateTo(view, data = null) {
 
 <template>
   <div id="app">
-    <!-- Debug info -->
-    <div style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; z-index: 9999; font-size: 12px;">
-      Current View: {{ currentView }}
-    </div>
     <div v-if="currentView === 'home'">
       <Home @navigate="navigateTo" />
     </div>
