@@ -4,12 +4,12 @@ import { ref } from 'vue'
 const emit = defineEmits(['navigate'])
 
 const modules = [
-  { id: 1, name: '预约挂号', icon: '📅', path: 'appointment' },
-  { id: 2, name: '缴费查询', icon: '💳', path: 'payment' },
-  { id: 3, name: '报告打印', icon: '📄', path: 'report' },
-  { id: 4, name: '自助充值', icon: '💵', path: 'recharge' },
-  { id: 5, name: '信息查询', icon: '🔍', path: 'info' },
-  { id: 6, name: '满意度评价', icon: '⭐', path: 'feedback' }
+  { id: 1, name: '预约挂号', icon: '📅', path: 'appointment', iconClass: '' },
+  { id: 2, name: '缴费查询', icon: '💳', path: 'payment-method', iconClass: '' },
+  { id: 3, name: '报告打印', icon: '📄', path: 'report', iconClass: '' },
+  { id: 4, name: '自助缴费', icon: '', path: 'payment-method', iconClass: 'payment-icon' },
+  { id: 5, name: '信息查询', icon: '🔍', path: 'info', iconClass: '' },
+  { id: 6, name: '满意度评价', icon: '⭐', path: 'feedback', iconClass: '' }
 ]
 
 function navigateToModule(module) {
@@ -33,7 +33,7 @@ function navigateToModule(module) {
           class="module-item"
           @click="navigateToModule(module)"
         >
-          <div class="module-icon">{{ module.icon }}</div>
+          <div class="module-icon" :class="module.iconClass">{{ module.icon }}</div>
           <div class="module-name">{{ module.name }}</div>
         </div>
       </div>
@@ -111,6 +111,46 @@ function navigateToModule(module) {
 .module-icon {
   font-size: 48px;
   margin-bottom: 15px;
+}
+
+.module-icon.payment-icon {
+  width: 60px;
+  height: 60px;
+  position: relative;
+  font-size: 0;
+}
+
+.module-icon.payment-icon::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 36px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.module-icon.payment-icon::after {
+  content: '¥';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.module-item:hover .module-icon.payment-icon::before {
+  background: white;
+}
+
+.module-item:hover .module-icon.payment-icon::after {
+  color: #667eea;
 }
 
 .module-name {
